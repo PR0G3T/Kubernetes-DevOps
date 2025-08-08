@@ -1,0 +1,1 @@
+{"name":"log-output","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node src/index.js"},"dependencies":{"uuid":"^9.0.1"}}
