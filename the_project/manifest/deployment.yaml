@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: todo-app
-          # Build locally with: docker build -t todo-app:1.2 ./the_project/todo-app
-          image: todo-app:1.2
+          # Build locally with: docker build -t todo-app:1.4 ./the_project/todo-app
+          image: todo-app:1.4
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
@@ -25,3 +25,4 @@ spec:
           ports:
             - name: http
               containerPort: 3000
+
