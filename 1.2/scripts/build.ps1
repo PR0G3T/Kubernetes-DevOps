@@ -3,5 +3,3 @@ param(
 )
 
 docker build -t todo-app:$Tag .
-
-
