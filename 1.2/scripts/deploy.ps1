@@ -1,7 +1,11 @@
 param(
-  [string]$Image = "todo-app:1.2"
+  [Parameter(Mandatory = $true)] [string] $Image,
+  [string] $Namespace = 'default'
 )
 
-kubectl apply -f k8s/deployment.yaml | Out-Null
-kubectl set image deployment/todo-app todo-app=$Image --record | Out-Null
-kubectl rollout status deployment/todo-app
+. "$PSScriptRoot\..\..\scripts\lib.ps1"
+
+$manifest = (Resolve-Path "$PSScriptRoot\..\k8s\deployment.yaml").Path
+Deploy-App -K8sManifestPath $manifest -Image $Image -DeploymentName 'todo-server' -ContainerName 'todo-server' -Namespace $Namespace
+
+

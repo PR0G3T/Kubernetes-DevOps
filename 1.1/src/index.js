@@ -1,11 +1,26 @@
-import { v4 as uuidv4 } from "uuid";
+'use strict';
 
-const id = uuidv4();
+const crypto = require('crypto');
 
-function logLine() {
-  const ts = new Date().toISOString();
-  console.log(`${ts}: ${id}`);
+function generateRandomString() {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return crypto.randomBytes(16).toString('hex');
 }
 
-logLine();
-setInterval(logLine, 5000);
+const instanceId = generateRandomString();
+
+function logMessage() {
+  const timestamp = new Date().toISOString();
+  // eslint-disable-next-line no-console
+  console.log(`${timestamp}: ${instanceId}`);
+}
+
+logMessage();
+setInterval(logMessage, 5000);
+
+process.on('SIGTERM', () => process.exit(0));
+process.on('SIGINT', () => process.exit(0));
+
+

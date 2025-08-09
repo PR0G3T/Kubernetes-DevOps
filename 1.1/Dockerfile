@@ -1,6 +1,11 @@
+# syntax=docker/dockerfile:1
 FROM node:20-alpine
+
 WORKDIR /usr/src/app
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev || npm i --only=prod
+
+# Only source is needed; no external dependencies
 COPY src ./src
-CMD ["npm","start"]
+
+CMD ["node", "src/index.js"]
+
+

@@ -1,5 +1,10 @@
 param(
-  [string]$Tag = "1.2"
+  [Parameter(Mandatory = $true)] [string] $Image
 )
 
-docker build -t todo-app:$Tag .
+. "$PSScriptRoot\..\..\scripts\lib.ps1"
+
+$context = (Resolve-Path "$PSScriptRoot\..\").Path
+Build-Image -ContextPath $context -Image $Image
+
+

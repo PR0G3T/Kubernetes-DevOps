@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: log-output
+  labels:
+    app: log-output
 spec:
   replicas: 1
   selector:
@@ -12,11 +14,17 @@ spec:
       labels:
         app: log-output
     spec:
+      restartPolicy: Always
       containers:
         - name: log-output
-          image: log-output:1.1
+          image: IMAGE_PLACEHOLDER
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: 10m
-              memory: 32Mi
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+
+

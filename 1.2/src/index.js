@@ -1,18 +1,21 @@
-import http from "node:http";
+'use strict';
 
-const port = Number.parseInt(process.env.PORT || "3000", 10);
+const express = require('express');
 
-const server = http.createServer((req, res) => {
-  if (req.url === "/healthz") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("ok");
-    return;
-  }
+const app = express();
+const portEnv = process.env.PORT;
+const port = Number(portEnv) > 0 ? Number(portEnv) : 3000;
 
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("todo app");
+app.get('/', (_req, res) => {
+  res.type('text/plain').send('OK');
 });
 
-server.listen(port, () => {
+const server = app.listen(port, () => {
+  // eslint-disable-next-line no-console
   console.log(`Server started in port ${port}`);
 });
+
+process.on('SIGTERM', () => server.close(() => process.exit(0)));
+process.on('SIGINT', () => server.close(() => process.exit(0)));
+
+

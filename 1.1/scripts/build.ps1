@@ -1,7 +1,10 @@
 param(
-  [string]$Tag = "1.1"
+  [Parameter(Mandatory = $true)] [string] $Image
 )
 
-npm install --no-audit --no-fund
+. "$PSScriptRoot\..\..\scripts\lib.ps1"
 
-docker build -t log-output:$Tag .
+$context = (Resolve-Path "$PSScriptRoot\..\").Path
+Build-Image -ContextPath $context -Image $Image
+
+

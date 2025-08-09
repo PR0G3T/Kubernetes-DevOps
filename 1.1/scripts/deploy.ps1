@@ -1,7 +1,11 @@
 param(
-  [string]$Image = "log-output:1.1"
+  [Parameter(Mandatory = $true)] [string] $Image,
+  [string] $Namespace = 'default'
 )
 
-kubectl apply -f k8s/deployment.yaml | Out-Null
-kubectl set image deployment/log-output log-output=$Image --record | Out-Null
-kubectl rollout status deployment/log-output
+. "$PSScriptRoot\..\..\scripts\lib.ps1"
+
+$manifest = (Resolve-Path "$PSScriptRoot\..\k8s\deployment.yaml").Path
+Deploy-App -K8sManifestPath $manifest -Image $Image -DeploymentName 'log-output' -ContainerName 'log-output' -Namespace $Namespace
+
+

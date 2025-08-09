@@ -1,25 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todo-app
+  name: todo-server
+  labels:
+    app: todo-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: todo-app
+      app: todo-server
   template:
     metadata:
       labels:
-        app: todo-app
+        app: todo-server
     spec:
+      restartPolicy: Always
       containers:
-        - name: todo-app
-          image: todo-app:1.2
+        - name: todo-server
+          image: IMAGE_PLACEHOLDER
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
               value: "3000"
+          ports:
+            - containerPort: 3000
           resources:
             requests:
-              cpu: 10m
-              memory: 32Mi
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+
+

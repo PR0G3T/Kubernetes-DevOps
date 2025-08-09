@@ -1,9 +1,10 @@
 node_modules
-npm-debug.log*
+npm-debug.log
 Dockerfile*
 .dockerignore
 .git
 .gitignore
-.kube
-.idea
-.vscode
+k8s
+scripts
+
+
