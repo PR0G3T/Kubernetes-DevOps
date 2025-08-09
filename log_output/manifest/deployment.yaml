@@ -14,10 +14,9 @@ spec:
       labels:
         app: log-output
     spec:
-      restartPolicy: Always
       containers:
         - name: log-output
-          image: IMAGE_PLACEHOLDER
+          image: pr0g3t/log-output:1.1
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -26,5 +25,4 @@ spec:
             limits:
               cpu: "200m"
               memory: "128Mi"
-
 
