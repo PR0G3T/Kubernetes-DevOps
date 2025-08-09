@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-output
+  labels:
+    app: log-output
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-output
+  template:
+    metadata:
+      labels:
+        app: log-output
+    spec:
+      containers:
+        - name: log-output
+          # Build locally with: docker build -t log-output:1.1 ./log_output
+          # Ensure the image is available in your cluster (e.g., push to a registry or load to kind)
+          image: log-output:1.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LOG_INTERVAL_MS
+              value: "5000"
+

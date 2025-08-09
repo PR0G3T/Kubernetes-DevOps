@@ -1,13 +1,13 @@
-# syntax=docker/dockerfile:1
+FROM node:20-alpine
 
-FROM node:20-alpine AS base
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# No dependencies are needed for this simple app
-COPY index.js ./
+# Only index.js is needed; no dependencies
+COPY --chown=node:node index.js ./
 
 USER node
 
-CMD ["node", "index.js"]
+ENV LOG_INTERVAL_MS=5000
 
+CMD ["node", "index.js"]
 
