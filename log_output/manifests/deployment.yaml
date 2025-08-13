@@ -44,5 +44,6 @@ spec:
               mountPath: /data
       volumes:
         - name: shared-data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: shared-data-pvc
 
