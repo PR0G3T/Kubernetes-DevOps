@@ -127,6 +127,10 @@ const server = http.createServer((req, res) => {
       p { margin: 0.25rem 0; color: #374151; }
       code { background: #f3f4f6; padding: 0.125rem 0.375rem; border-radius: 6px; }
       img { max-width: 100%; height: auto; display: block; margin: 1rem 0; border-radius: 8px; }
+      .todo-row { display: flex; gap: 0.5rem; align-items: center; margin: 0.5rem 0 0.25rem; }
+      input[type="text"] { flex: 1; padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; }
+      button { padding: 0.4rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; background: #f9fafb; cursor: pointer; }
+      small { color: #6b7280; }
     </style>
   </head>
   <body>
@@ -134,8 +138,32 @@ const server = http.createServer((req, res) => {
       <h1>The project App</h1>
       <p>Server is running on port <code>${port}</code>.</p>
       <img src="/image" alt="Random" />
+      <div class="todo-row">
+        <input id="todoInput" type="text" placeholder="New todo" maxlength="140" />
+        <button id="todoCreate" disabled>Create todo</button>
+      </div>
+      <small id="charInfo">0 / 140</small>
+      <ul>
+        <li>Learn JavaScript</li>
+        <li>Learn React</li>
+        <li>Build a project</li>
+      </ul>
       <p>DevOps with Kubernetes 2025</p>
     </div>
+    <script>
+      (function () {
+        const input = document.getElementById('todoInput');
+        const btn = document.getElementById('todoCreate');
+        const info = document.getElementById('charInfo');
+        function update() {
+          const len = input.value.length;
+          info.textContent = len + ' / 140';
+          btn.disabled = len === 0 || len > 140;
+        }
+        input.addEventListener('input', update);
+        update();
+      })();
+    </script>
   </body>
 </html>`;
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
