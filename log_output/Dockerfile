@@ -8,6 +8,7 @@ COPY --chown=node:node index.js ./
 USER node
 
 ENV LOG_INTERVAL_MS=5000
+ENV PORT=8080
 
 CMD ["node", "index.js"]
 

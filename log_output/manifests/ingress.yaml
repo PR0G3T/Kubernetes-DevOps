@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: log-output
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: log-output.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: log-output
+                port:
+                  number: 8080
+
