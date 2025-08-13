@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apps-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: apps.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: log-output
+                port:
+                  number: 8080
+          - path: /pingpong
+            pathType: Prefix
+            backend:
+              service:
+                name: ping-pong
+                port:
+                  number: 8080
+
