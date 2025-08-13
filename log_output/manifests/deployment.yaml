@@ -15,17 +15,34 @@ spec:
         app: log-output
     spec:
       containers:
-        - name: log-output
-          # Build locally with: docker build -t log-output:1.7 ./log_output
-          # Ensure the image is available in your cluster (e.g., push to a registry or load to kind)
-          image: log-output:1.7
+        - name: writer
+          # Build locally with: docker build -t log-output-writer:1.10 ./log_output/writer
+          image: log-output-writer:1.10
           imagePullPolicy: IfNotPresent
           env:
             - name: LOG_INTERVAL_MS
               value: "5000"
+            - name: LOG_FILE_PATH
+              value: "/data/log.txt"
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+        - name: reader
+          # Build locally with: docker build -t log-output-reader:1.10 ./log_output/reader
+          image: log-output-reader:1.10
+          imagePullPolicy: IfNotPresent
+          env:
             - name: PORT
               value: "8080"
+            - name: LOG_FILE_PATH
+              value: "/data/log.txt"
           ports:
             - name: http
               containerPort: 8080
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+      volumes:
+        - name: shared-data
+          emptyDir: {}
 
