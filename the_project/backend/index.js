@@ -1,17 +1,27 @@
 "use strict";
 
 const http = require("http");
+const { Client } = require("pg");
 
 const port = Number(process.env.PORT || 4000);
 const maxLen = Number(process.env.TODO_MAXLEN || 140);
 
-/** In-memory todo store */
-const todos = [
-  { id: 1, text: "Learn JavaScript" },
-  { id: 2, text: "Learn React" },
-  { id: 3, text: "Build a project" },
-];
-let nextId = 4;
+const databaseUrl = process.env.DATABASE_URL || "";
+let pgClient = null;
+
+async function initDb() {
+  if (!databaseUrl) return;
+  pgClient = new Client({ connectionString: databaseUrl });
+  await pgClient.connect();
+  await pgClient.query(
+    "CREATE TABLE IF NOT EXISTS todos (id SERIAL PRIMARY KEY, text TEXT NOT NULL CHECK (char_length(text) BETWEEN 1 AND $1));",
+    [maxLen]
+  );
+}
+
+initDb().catch(() => {
+  pgClient = null;
+});
 
 function readRequestBody(req, cb) {
   let data = "";
@@ -28,7 +38,14 @@ function readRequestBody(req, cb) {
 const server = http.createServer((req, res) => {
   if (req.method === "GET" && req.url === "/todos") {
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify(todos));
+    if (!pgClient) {
+      res.end(JSON.stringify([]));
+      return;
+    }
+    pgClient
+      .query("SELECT id, text FROM todos ORDER BY id ASC;")
+      .then((r) => res.end(JSON.stringify(r.rows)))
+      .catch(() => res.end(JSON.stringify([])));
     return;
   }
 
@@ -42,10 +59,21 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ error: "Todo must be 1-140 chars" }));
           return;
         }
-        const todo = { id: nextId++, text };
-        todos.push(todo);
-        res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
-        res.end(JSON.stringify(todo));
+        if (!pgClient) {
+          res.writeHead(503, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ error: "DB unavailable" }));
+          return;
+        }
+        pgClient
+          .query("INSERT INTO todos (text) VALUES ($1) RETURNING id, text;", [text])
+          .then((r) => {
+            res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify(r.rows[0]));
+          })
+          .catch(() => {
+            res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ error: "Insert failed" }));
+          });
       } catch (_e) {
         res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({ error: "Invalid JSON" }));

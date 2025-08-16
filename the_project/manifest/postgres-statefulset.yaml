@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: project-postgres-credentials
+  namespace: project
+type: Opaque
+stringData:
+  POSTGRES_DB: tododb
+  POSTGRES_USER: todouser
+  POSTGRES_PASSWORD: todopass
+  DATABASE_URL: postgresql://todouser:todopass@project-postgres.project.svc.cluster.local:5432/tododb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-postgres
+  namespace: project
+  labels:
+    app: project-postgres
+spec:
+  ports:
+    - name: postgres
+      port: 5432
+  clusterIP: None
+  selector:
+    app: project-postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: project-postgres
+  namespace: project
+spec:
+  serviceName: project-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-postgres
+  template:
+    metadata:
+      labels:
+        app: project-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: project-postgres-credentials
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: project-postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: project-postgres-credentials
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+
