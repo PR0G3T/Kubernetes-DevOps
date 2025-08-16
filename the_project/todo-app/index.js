@@ -143,11 +143,7 @@ const server = http.createServer((req, res) => {
         <button id="todoCreate" disabled>Create todo</button>
       </div>
       <small id="charInfo">0 / 140</small>
-      <ul>
-        <li>Learn JavaScript</li>
-        <li>Learn React</li>
-        <li>Build a project</li>
-      </ul>
+      <ul id="todoList"></ul>
       <p>DevOps with Kubernetes 2025</p>
     </div>
     <script>
@@ -155,13 +151,44 @@ const server = http.createServer((req, res) => {
         const input = document.getElementById('todoInput');
         const btn = document.getElementById('todoCreate');
         const info = document.getElementById('charInfo');
+        const list = document.getElementById('todoList');
         function update() {
           const len = input.value.length;
           info.textContent = len + ' / 140';
           btn.disabled = len === 0 || len > 140;
         }
+        async function refreshTodos() {
+          try {
+            const resp = await fetch('/todos');
+            const todos = await resp.json();
+            list.innerHTML = '';
+            for (const t of todos) {
+              const li = document.createElement('li');
+              li.textContent = t.text;
+              list.appendChild(li);
+            }
+          } catch (e) {
+            list.innerHTML = '';
+          }
+        }
+        async function createTodo() {
+          const text = input.value.trim();
+          if (!text || text.length > 140) return;
+          try {
+            await fetch('/todos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text })
+            });
+            input.value = '';
+            update();
+            refreshTodos();
+          } catch (e) {}
+        }
+        btn.addEventListener('click', createTodo);
         input.addEventListener('input', update);
         update();
+        refreshTodos();
       })();
     </script>
   </body>
