@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project-config
+  namespace: project
+data:
+  WELCOME_MESSAGE: "Welcome to the Todo App"
+  CACHE_DIR: "/cache"
+  CACHE_TTL_SECONDS: "600"
+  IMAGE_SOURCE_URL: "https://picsum.photos/1200"
+  TODO_MAXLEN: "140"
+

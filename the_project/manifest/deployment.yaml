@@ -17,20 +17,36 @@ spec:
     spec:
       containers:
         - name: todo-app
-          # Build locally with: docker build -t todo-app:1.13 ./the_project/todo-app
-          image: todo-app:1.13
+          # Build locally with: docker build -t todo-app:2.6 ./the_project/todo-app
+          image: todo-app:2.6
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
-              value: "3000"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: PORT
+                  optional: true
             - name: WELCOME_MESSAGE
-              value: "Welcome to the Todo App"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: WELCOME_MESSAGE
             - name: CACHE_DIR
-              value: "/cache"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: CACHE_DIR
             - name: CACHE_TTL_SECONDS
-              value: "600"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: CACHE_TTL_SECONDS
             - name: IMAGE_SOURCE_URL
-              value: "https://picsum.photos/1200"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: IMAGE_SOURCE_URL
           ports:
             - name: http
               containerPort: 3000
@@ -54,14 +70,21 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          # Build locally with: docker build -t todo-backend:2.2 ./the_project/backend
-          image: todo-backend:2.2
+          # Build locally with: docker build -t todo-backend:2.6 ./the_project/backend
+          image: todo-backend:2.6
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
-              value: "4000"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: BACKEND_PORT
+                  optional: true
             - name: TODO_MAXLEN
-              value: "140"
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: TODO_MAXLEN
           ports:
             - name: http
               containerPort: 4000

@@ -8,7 +8,7 @@ const path = require("path");
 const port = Number(process.env.PORT || 3000);
 const welcomeMessage = process.env.WELCOME_MESSAGE || "Welcome to the Todo App";
 const cacheDir = process.env.CACHE_DIR || "/cache";
-const cacheTtlSeconds = Number(process.env.CACHE_TTL_SECONDS || 600); // 10 minutes default
+const cacheTtlSeconds = Number(process.env.CACHE_TTL_SECONDS || 600);
 const imageUrl = process.env.IMAGE_SOURCE_URL || "https://picsum.photos/1200";
 
 const cachedImagePath = path.join(cacheDir, "image.jpg");
