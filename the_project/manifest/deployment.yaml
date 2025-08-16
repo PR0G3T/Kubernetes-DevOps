@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: todo-app
+  namespace: project
   labels:
     app: todo-app
 spec:
@@ -38,6 +39,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: todo-backend
+  namespace: project
   labels:
     app: todo-backend
 spec:
