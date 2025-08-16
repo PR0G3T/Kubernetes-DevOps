@@ -131,6 +131,7 @@ const server = http.createServer((req, res) => {
       input[type="text"] { flex: 1; padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; }
       button { padding: 0.4rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; background: #f9fafb; cursor: pointer; }
       small { color: #6b7280; }
+      ul { padding-left: 1rem; }
     </style>
   </head>
   <body>
@@ -157,38 +158,29 @@ const server = http.createServer((req, res) => {
           info.textContent = len + ' / 140';
           btn.disabled = len === 0 || len > 140;
         }
-        async function refreshTodos() {
+        input.addEventListener('input', update);
+        update();
+        async function fetchTodos() {
           try {
-            const resp = await fetch('/todos');
-            const todos = await resp.json();
-            list.innerHTML = '';
-            for (const t of todos) {
-              const li = document.createElement('li');
-              li.textContent = t.text;
-              list.appendChild(li);
-            }
+            const res = await fetch('/api/todos');
+            const data = await res.json();
+            list.innerHTML = data.map(t => `<li>${t.text}</li>`).join('');
           } catch (e) {
-            list.innerHTML = '';
+            list.innerHTML = '<li>Failed to load todos</li>';
           }
         }
         async function createTodo() {
           const text = input.value.trim();
           if (!text || text.length > 140) return;
           try {
-            await fetch('/todos', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text })
-            });
+            await fetch('/api/todos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
             input.value = '';
             update();
-            refreshTodos();
+            fetchTodos();
           } catch (e) {}
         }
         btn.addEventListener('click', createTodo);
-        input.addEventListener('input', update);
-        update();
-        refreshTodos();
+        fetchTodos();
       })();
     </script>
   </body>
