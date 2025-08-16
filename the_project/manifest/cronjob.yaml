@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: todo-random-wiki
+  namespace: project
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: create-todo
+              image: curlimages/curl:8.7.1
+              env:
+                - name: BACKEND_URL
+                  value: http://todo-backend.project.svc.cluster.local:4000/todos
+                - name: RANDOM_URL
+                  value: https://en.wikipedia.org/wiki/Special:Random
+              command:
+                - sh
+                - -c
+                - |
+                  set -euo pipefail
+                  rand_url=$(curl -sI "$RANDOM_URL" | awk -F': ' '/^Location: /{print $2}' | tr -d '\r\n')
+                  if [ -z "$rand_url" ]; then
+                    rand_url=$(curl -s -L -o /dev/null -w '%{url_effective}' "$RANDOM_URL")
+                  fi
+                  payload=$(printf '{"text":"Read %s"}' "$rand_url")
+                  curl -s -X POST -H 'Content-Type: application/json' --data "$payload" "$BACKEND_URL" | cat
+
