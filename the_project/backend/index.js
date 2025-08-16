@@ -9,6 +9,12 @@ const maxLen = Number(process.env.TODO_MAXLEN || 140);
 const databaseUrl = process.env.DATABASE_URL || "";
 let pgClient = null;
 
+function log(level, message, meta) {
+  const ts = new Date().toISOString();
+  const metaStr = meta ? ` ${JSON.stringify(meta)}` : "";
+  process.stdout.write(`[${ts}] ${level.toUpperCase()} ${message}${metaStr}\n`);
+}
+
 async function initDb() {
   if (!databaseUrl) return;
   pgClient = new Client({ connectionString: databaseUrl });
@@ -36,6 +42,7 @@ function readRequestBody(req, cb) {
 }
 
 const server = http.createServer((req, res) => {
+  log("info", `incoming ${req.method} ${req.url}`);
   if (req.method === "GET" && req.url === "/todos") {
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     if (!pgClient) {
@@ -44,8 +51,14 @@ const server = http.createServer((req, res) => {
     }
     pgClient
       .query("SELECT id, text FROM todos ORDER BY id ASC;")
-      .then((r) => res.end(JSON.stringify(r.rows)))
-      .catch(() => res.end(JSON.stringify([])));
+      .then((r) => {
+        log("info", "fetched todos", { count: r.rowCount });
+        res.end(JSON.stringify(r.rows));
+      })
+      .catch((e) => {
+        log("error", "failed to fetch todos", { error: String(e) });
+        res.end(JSON.stringify([]));
+      });
     return;
   }
 
@@ -55,11 +68,13 @@ const server = http.createServer((req, res) => {
         const payload = JSON.parse(String(raw || "{}"));
         const text = String(payload.text || "").trim();
         if (text.length === 0 || text.length > maxLen) {
+          log("warn", "todo rejected: length constraint", { length: text.length, maxLen });
           res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify({ error: "Todo must be 1-140 chars" }));
           return;
         }
         if (!pgClient) {
+          log("error", "db unavailable when creating todo");
           res.writeHead(503, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify({ error: "DB unavailable" }));
           return;
@@ -67,14 +82,17 @@ const server = http.createServer((req, res) => {
         pgClient
           .query("INSERT INTO todos (text) VALUES ($1) RETURNING id, text;", [text])
           .then((r) => {
+            log("info", "todo created", { id: r.rows[0].id, length: text.length });
             res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
             res.end(JSON.stringify(r.rows[0]));
           })
-          .catch(() => {
+          .catch((e) => {
+            log("error", "insert failed", { error: String(e) });
             res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
             res.end(JSON.stringify({ error: "Insert failed" }));
           });
       } catch (_e) {
+        log("warn", "invalid json in request body");
         res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({ error: "Invalid JSON" }));
       }
