@@ -41,13 +41,26 @@ spec:
               value: "ping-pong"
             - name: PING_PONG_PORT
               value: "8080"
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: log-output-config
+                  key: MESSAGE
           ports:
             - name: http
               containerPort: 8080
           volumeMounts:
             - name: shared-data
               mountPath: /data
+            - name: log-output-config-volume
+              mountPath: /config
       volumes:
         - name: shared-data
           emptyDir: {}
+        - name: log-output-config-volume
+          configMap:
+            name: log-output-config
+            items:
+              - key: information.txt
+                path: information.txt
 
