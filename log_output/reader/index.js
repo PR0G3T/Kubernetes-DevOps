@@ -2,37 +2,54 @@
 
 const http = require("http");
 const fs = require("fs");
-const path = require("path");
+const http = require("http");
 
 const port = Number(process.env.PORT || 8080);
 const logFilePath = process.env.LOG_FILE_PATH || "/data/log.txt";
-const counterFilePath = process.env.COUNTER_FILE_PATH || "/shared/pingpong_count.txt";
+const pingPongServiceHost = process.env.PING_PONG_HOST || "ping-pong";
+const pingPongServicePort = Number(process.env.PING_PONG_PORT || 8080);
 
 const server = http.createServer((req, res) => {
   if (req.method === "GET" && (req.url === "/" || req.url === "/status")) {
     try {
       const content = fs.readFileSync(logFilePath, { encoding: "utf-8" });
-      let count = 0;
-      try {
-        const raw = fs.readFileSync(counterFilePath, { encoding: "utf-8" }).trim();
-        count = Number(raw) || 0;
-      } catch (err) {
-        count = 0;
-      }
       const lines = content.trimEnd();
-      const body = `${lines}${lines ? "\n" : ""}Ping / Pongs: ${count}\n`;
-      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end(body);
+      // Fetch count from ping-pong service
+      const options = { hostname: pingPongServiceHost, port: pingPongServicePort, path: "/count", method: "GET" };
+      const req2 = http.request(options, (res2) => {
+        let data = "";
+        res2.setEncoding("utf-8");
+        res2.on("data", (chunk) => (data += chunk));
+        res2.on("end", () => {
+          const count = Number(String(data || "").trim()) || 0;
+          const body = `${lines}${lines ? "\n" : ""}Ping / Pongs: ${count}\n`;
+          res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+          res.end(body);
+        });
+      });
+      req2.on("error", () => {
+        const body = `${lines}${lines ? "\n" : ""}Ping / Pongs: 0\n`;
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end(body);
+      });
+      req2.end();
     } catch (err) {
       res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-      let count = 0;
-      try {
-        const raw = fs.readFileSync(counterFilePath, { encoding: "utf-8" }).trim();
-        count = Number(raw) || 0;
-      } catch (e) {
-        count = 0;
-      }
-      res.end(`Ping / Pongs: ${count}\n`);
+      // If we cannot read the log file, still try to fetch count
+      const options = { hostname: pingPongServiceHost, port: pingPongServicePort, path: "/count", method: "GET" };
+      const req2 = http.request(options, (res2) => {
+        let data = "";
+        res2.setEncoding("utf-8");
+        res2.on("data", (chunk) => (data += chunk));
+        res2.on("end", () => {
+          const count = Number(String(data || "").trim()) || 0;
+          res.end(`Ping / Pongs: ${count}\n`);
+        });
+      });
+      req2.on("error", () => {
+        res.end("Ping / Pongs: 0\n");
+      });
+      req2.end();
     }
     return;
   }

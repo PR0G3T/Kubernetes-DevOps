@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: writer
-          # Build locally with: docker build -t log-output-writer:1.10 ./log_output/writer
-          image: log-output-writer:1.10
+          # Build locally with: docker build -t log-output-writer:2.1 ./log_output/writer
+          image: log-output-writer:2.1
           imagePullPolicy: IfNotPresent
           env:
             - name: LOG_INTERVAL_MS
@@ -28,14 +28,18 @@ spec:
             - name: shared-data
               mountPath: /data
         - name: reader
-          # Build locally with: docker build -t log-output-reader:1.10 ./log_output/reader
-          image: log-output-reader:1.10
+          # Build locally with: docker build -t log-output-reader:2.1 ./log_output/reader
+          image: log-output-reader:2.1
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
               value: "8080"
             - name: LOG_FILE_PATH
               value: "/data/log.txt"
+            - name: PING_PONG_HOST
+              value: "ping-pong"
+            - name: PING_PONG_PORT
+              value: "8080"
           ports:
             - name: http
               containerPort: 8080
@@ -44,6 +48,5 @@ spec:
               mountPath: /data
       volumes:
         - name: shared-data
-          persistentVolumeClaim:
-            claimName: shared-data-pvc
+          emptyDir: {}
 

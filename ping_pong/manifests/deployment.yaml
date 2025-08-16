@@ -16,22 +16,14 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          # Build locally with: docker build -t ping-pong:1.9 ./ping_pong
-          image: ping-pong:1.9
+          # Build locally with: docker build -t ping-pong:2.1 ./ping_pong
+          image: ping-pong:2.1
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
               value: "8080"
-            - name: COUNTER_FILE_PATH
-              value: "/shared/pingpong_count.txt"
           ports:
             - name: http
               containerPort: 8080
-          volumeMounts:
-            - name: shared-data
-              mountPath: /shared
-      volumes:
-        - name: shared-data
-          persistentVolumeClaim:
-            claimName: shared-data-pvc
+      # No shared volume needed for HTTP-based communication
 
