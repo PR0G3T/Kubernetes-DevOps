@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: ping-pong-cpu-namespace-guard
+  namespace: exercises
+spec:
+  args:
+    - name: namespace
+      value: exercises
+    - name: threshold
+      # Max allowed total CPU cores used in the namespace (example)
+      value: "1"
+  metrics:
+    - name: namespace-cpu-5m
+      interval: 30s
+      count: 10
+      successCondition: result < {{args.threshold}}
+      failureLimit: 1
+      provider:
+        prometheus:
+          # Adjust to your Prometheus service address
+          address: http://prometheus-kube-prometheus-stack-prometheus.prometheus.svc.cluster.local:9090
+          query: |
+            sum(
+              rate(container_cpu_usage_seconds_total{namespace="{{args.namespace}}",container!~"POD|"}[5m])
+            )
+
