@@ -1,0 +1,82 @@
+name: Build images and bump config repo (production)
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGISTRY: gcr.io
+  PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  CONFIG_REPO: ${{ secrets.CONFIG_REPO }}
+  CONFIG_REPO_TOKEN: ${{ secrets.CONFIG_REPO_TOKEN }}
+  CONFIG_PROD_PATH: ${{ secrets.CONFIG_PROD_PATH || 'the_project/manifest/overlays/production' }}
+
+jobs:
+  build-and-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Setup gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for gcr.io
+        run: gcloud auth configure-docker ${REGISTRY} --quiet
+
+      - name: Build and push images
+        run: |
+          set -euxo pipefail
+          TAG=${GITHUB_REF_NAME}
+          docker build -t ${REGISTRY}/${PROJECT_ID}/todo-app:${TAG} ./the_project/todo-app
+          docker push ${REGISTRY}/${PROJECT_ID}/todo-app:${TAG}
+          docker build -t ${REGISTRY}/${PROJECT_ID}/todo-backend:${TAG} ./the_project/backend
+          docker push ${REGISTRY}/${PROJECT_ID}/todo-backend:${TAG}
+          docker build -t ${REGISTRY}/${PROJECT_ID}/broadcaster:${TAG} ./the_project/broadcaster
+          docker push ${REGISTRY}/${PROJECT_ID}/broadcaster:${TAG}
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      - name: Prepare config repo
+        run: |
+          set -euxo pipefail
+          git clone https://x-access-token:${CONFIG_REPO_TOKEN}@github.com/${CONFIG_REPO}.git config-repo
+          ls -la config-repo
+
+      - name: Install yq
+        run: |
+          sudo curl -L "https://github.com/mikefarah/yq/releases/download/v4.43.1/yq_linux_amd64" -o /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update production overlay image tags
+        run: |
+          set -euxo pipefail
+          FILE="config-repo/${CONFIG_PROD_PATH}/kustomization.yaml"
+          yq -i '.images = [
+            {"name":"todo-app","newName":"'${REGISTRY}'/'${PROJECT_ID}'/todo-app","newTag":"'${TAG}'"},
+            {"name":"todo-backend","newName":"'${REGISTRY}'/'${PROJECT_ID}'/todo-backend","newTag":"'${TAG}'"},
+            {"name":"broadcaster","newName":"'${REGISTRY}'/'${PROJECT_ID}'/broadcaster","newTag":"'${TAG}'"}
+          ]' "$FILE"
+
+      - name: Commit and push to config repo (production)
+        run: |
+          set -euxo pipefail
+          cd config-repo
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "chore(production): bump images to ${GITHUB_REF_NAME}"
+          git push origin HEAD:main
+
+

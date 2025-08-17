@@ -3,5 +3,15 @@ kind: Kustomization
 namespace: project-production
 resources:
   - ../../
+images:
+  - name: todo-app
+    newName: gcr.io/YOUR_GCP_PROJECT/todo-app
+    newTag: "stable"
+  - name: todo-backend
+    newName: gcr.io/YOUR_GCP_PROJECT/todo-backend
+    newTag: "stable"
+  - name: broadcaster
+    newName: gcr.io/YOUR_GCP_PROJECT/broadcaster
+    newTag: "stable"
 
 

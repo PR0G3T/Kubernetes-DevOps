@@ -7,5 +7,15 @@ patches:
   - path: patch-deployments.yaml
     target:
       kind: Deployment
+images:
+  - name: todo-app
+    newName: gcr.io/YOUR_GCP_PROJECT/todo-app
+    newTag: "latest"
+  - name: todo-backend
+    newName: gcr.io/YOUR_GCP_PROJECT/todo-backend
+    newTag: "latest"
+  - name: broadcaster
+    newName: gcr.io/YOUR_GCP_PROJECT/broadcaster
+    newTag: "latest"
 
 
