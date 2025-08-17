@@ -47,6 +47,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Ingress health/root check must succeed
+  if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("ok\n");
+    return;
+  }
+
   if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end("<!doctype html><html><body><p>Ping-Pong app. Try <a href=\"/pingpong\">/pingpong</a>.</p></body></html>");
