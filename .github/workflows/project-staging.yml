@@ -1,0 +1,47 @@
+name: The Project (staging) GitOps
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'the_project/**'
+      - 'namespaces/staging-namespace.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: project-staging-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_LOCATION }}
+
+      - name: Apply staging overlay
+        run: |
+          set -euxo pipefail
+          kubectl apply -f namespaces/staging-namespace.yaml
+          kubectl apply -k the_project/manifest/overlays/staging
+
+

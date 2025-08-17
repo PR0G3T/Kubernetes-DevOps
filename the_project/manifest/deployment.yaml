@@ -167,6 +167,8 @@ spec:
           env:
             - name: NATS_URL
               value: nats://nats.project.svc.cluster.local:4222
+            - name: BROADCAST_MODE
+              value: "forward"
             - name: BROADCAST_URL
               valueFrom:
                 configMapKeyRef:

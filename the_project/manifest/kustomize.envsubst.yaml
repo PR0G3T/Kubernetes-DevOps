@@ -10,6 +10,7 @@ resources:
   - ingress.yaml
   - postgres-statefulset.yaml
   - cronjob.yaml
+  - nats.yaml
 
 images:
   - name: todo-app

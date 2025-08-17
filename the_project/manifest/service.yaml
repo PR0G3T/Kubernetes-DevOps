@@ -45,4 +45,20 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broadcaster
+  namespace: project
+  labels:
+    app: broadcaster
+spec:
+  type: ClusterIP
+  selector:
+    app: broadcaster
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
 

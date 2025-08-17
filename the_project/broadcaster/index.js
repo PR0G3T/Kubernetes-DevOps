@@ -6,6 +6,7 @@ const http = require("http");
 
 const natsUrl = process.env.NATS_URL || "";
 const targetUrl = process.env.BROADCAST_URL || "";
+const mode = (process.env.BROADCAST_MODE || "forward").toLowerCase();
 
 const sc = StringCodec();
 
@@ -38,8 +39,8 @@ function postJson(urlString, body) {
 }
 
 async function main() {
-  if (!natsUrl || !targetUrl) {
-    process.stderr.write("Missing NATS_URL or BROADCAST_URL\n");
+  if (!natsUrl) {
+    process.stderr.write("Missing NATS_URL\n");
     process.exit(1);
   }
   const conn = await connect({ servers: natsUrl });
@@ -51,7 +52,11 @@ async function main() {
         user: "bot",
         message: `Todo ${payload.eventType}: ${payload.todo?.id} ${payload.todo?.text} done=${payload.todo?.done}`,
       };
-      await postJson(targetUrl, message);
+      if (mode === "log" || !targetUrl) {
+        process.stdout.write(`[broadcast] ${message.message}\n`);
+      } else {
+        await postJson(targetUrl, message);
+      }
     } catch (_e) {
       // swallow, next message
     }
