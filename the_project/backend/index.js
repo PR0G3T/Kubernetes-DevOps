@@ -2,12 +2,15 @@
 
 const http = require("http");
 const { Client } = require("pg");
+const { connect, StringCodec } = require("nats");
 
 const port = Number(process.env.PORT || 4000);
 const maxLen = Number(process.env.TODO_MAXLEN || 140);
 
 const databaseUrl = process.env.DATABASE_URL || "";
 let pgClient = null;
+let natsConn = null;
+const sc = StringCodec();
 
 function log(level, message, meta) {
   const ts = new Date().toISOString();
@@ -31,6 +34,23 @@ async function initDb() {
 initDb().catch(() => {
   pgClient = null;
 });
+async function initNats() {
+  const natsUrl = process.env.NATS_URL || "";
+  if (!natsUrl) return;
+  natsConn = await connect({ servers: natsUrl });
+}
+
+initNats().catch(() => {
+  natsConn = null;
+});
+
+function publishTodoEvent(eventType, payload) {
+  if (!natsConn) return;
+  try {
+    const msg = sc.encode(JSON.stringify({ eventType, ...payload }));
+    natsConn.publish("todos.events", msg);
+  } catch (_e) {}
+}
 
 async function checkDbConnection() {
   if (!pgClient) return false;
@@ -96,6 +116,7 @@ const server = http.createServer((req, res) => {
           .query("INSERT INTO todos (text) VALUES ($1) RETURNING id, text, done;", [text])
           .then((r) => {
             log("info", "todo created", { id: r.rows[0].id, length: text.length });
+            publishTodoEvent("created", { todo: r.rows[0] });
             res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
             res.end(JSON.stringify(r.rows[0]));
           })
@@ -139,6 +160,7 @@ const server = http.createServer((req, res) => {
               res.end(JSON.stringify({ error: "Not Found" }));
               return;
             }
+            publishTodoEvent("updated", { todo: r.rows[0] });
             res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
             res.end(JSON.stringify(r.rows[0]));
           })

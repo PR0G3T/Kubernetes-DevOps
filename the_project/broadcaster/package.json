@@ -1,11 +1,10 @@
 {
-  "name": "todo-backend",
-  "version": "2.8.0",
+  "name": "broadcaster",
+  "version": "1.0.0",
   "private": true,
   "type": "commonjs",
   "license": "UNLICENSED",
   "dependencies": {
-    "pg": "^8.12.0",
     "nats": "^2.19.0"
   }
 }

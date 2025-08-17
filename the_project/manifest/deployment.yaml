@@ -125,6 +125,8 @@ spec:
                 configMapKeyRef:
                   name: project-config
                   key: TODO_MAXLEN
+            - name: NATS_URL
+              value: nats://nats.project.svc.cluster.local:4222
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -140,4 +142,34 @@ spec:
         - name: image-cache
           persistentVolumeClaim:
             claimName: shared-data-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broadcaster
+  namespace: project
+  labels:
+    app: broadcaster
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: broadcaster
+  template:
+    metadata:
+      labels:
+        app: broadcaster
+    spec:
+      containers:
+        - name: broadcaster
+          image: broadcaster:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NATS_URL
+              value: nats://nats.project.svc.cluster.local:4222
+            - name: BROADCAST_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: BROADCAST_URL
 

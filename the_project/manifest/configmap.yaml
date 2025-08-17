@@ -9,4 +9,5 @@ data:
   CACHE_TTL_SECONDS: "600"
   IMAGE_SOURCE_URL: "https://picsum.photos/1200"
   TODO_MAXLEN: "140"
+  BROADCAST_URL: "http://example.com/webhook"
 
