@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: project
+namespace: ${NAMESPACE}
 
 resources:
   - configmap.yaml
@@ -13,9 +13,9 @@ resources:
 
 images:
   - name: todo-app
-    newName: gcr.io/YOUR_GCP_PROJECT/todo-app
-    newTag: "2.6"
+    newName: gcr.io/${GCP_PROJECT}/todo-app
+    newTag: "${APP_TAG}"
   - name: todo-backend
-    newName: gcr.io/YOUR_GCP_PROJECT/todo-backend
-    newTag: "2.8"
+    newName: gcr.io/${GCP_PROJECT}/todo-backend
+    newTag: "${BACKEND_TAG}"
 
