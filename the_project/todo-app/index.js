@@ -164,7 +164,21 @@ const server = http.createServer((req, res) => {
           try {
             const res = await fetch('/api/todos');
             const data = await res.json();
-            list.innerHTML = data.map(t => `<li>${t.text}</li>`).join('');
+            list.innerHTML = data.map(t => `
+              <li>
+                ${t.text}
+                ${t.done ? '' : `<button data-id="${t.id}" class="mark-done">Mark as done</button>`}
+              </li>
+            `).join('');
+            document.querySelectorAll('.mark-done').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                try {
+                  await fetch(`/api/todos/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: true }) });
+                  fetchTodos();
+                } catch (e) {}
+              });
+            });
           } catch (e) {
             list.innerHTML = '<li>Failed to load todos</li>';
           }

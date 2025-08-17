@@ -23,6 +23,9 @@ async function initDb() {
     "CREATE TABLE IF NOT EXISTS todos (id SERIAL PRIMARY KEY, text TEXT NOT NULL CHECK (char_length(text) BETWEEN 1 AND $1));",
     [maxLen]
   );
+  await pgClient.query(
+    "ALTER TABLE todos ADD COLUMN IF NOT EXISTS done BOOLEAN NOT NULL DEFAULT false;"
+  );
 }
 
 initDb().catch(() => {
@@ -60,7 +63,7 @@ const server = http.createServer((req, res) => {
       return;
     }
     pgClient
-      .query("SELECT id, text FROM todos ORDER BY id ASC;")
+      .query("SELECT id, text, done FROM todos ORDER BY id ASC;")
       .then((r) => {
         log("info", "fetched todos", { count: r.rowCount });
         res.end(JSON.stringify(r.rows));
@@ -90,7 +93,7 @@ const server = http.createServer((req, res) => {
           return;
         }
         pgClient
-          .query("INSERT INTO todos (text) VALUES ($1) RETURNING id, text;", [text])
+          .query("INSERT INTO todos (text) VALUES ($1) RETURNING id, text, done;", [text])
           .then((r) => {
             log("info", "todo created", { id: r.rows[0].id, length: text.length });
             res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
@@ -103,6 +106,48 @@ const server = http.createServer((req, res) => {
           });
       } catch (_e) {
         log("warn", "invalid json in request body");
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ error: "Invalid JSON" }));
+      }
+    });
+    return;
+  }
+
+  // PUT /todos/:id to set done flag
+  if (req.method === "PUT" && req.url.startsWith("/todos/")) {
+    if (!pgClient) {
+      res.writeHead(503, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "DB unavailable" }));
+      return;
+    }
+    const match = req.url.match(/^\/todos\/(\d+)$/);
+    if (!match) {
+      res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Invalid id" }));
+      return;
+    }
+    const id = Number(match[1]);
+    readRequestBody(req, (_err, raw) => {
+      try {
+        const payload = JSON.parse(String(raw || "{}"));
+        const done = Boolean(payload.done);
+        pgClient
+          .query("UPDATE todos SET done=$1 WHERE id=$2 RETURNING id, text, done;", [done, id])
+          .then((r) => {
+            if (r.rowCount === 0) {
+              res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
+              res.end(JSON.stringify({ error: "Not Found" }));
+              return;
+            }
+            res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify(r.rows[0]));
+          })
+          .catch((e) => {
+            log("error", "update failed", { error: String(e) });
+            res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ error: "Update failed" }));
+          });
+      } catch (_e) {
         res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({ error: "Invalid JSON" }));
       }
