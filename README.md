@@ -65,3 +65,5 @@
 - [5.2.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.2)
 - [5.3.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.3)
 - [5.4.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.4)
+- [5.6.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.6)
+- [5.7.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.7)
