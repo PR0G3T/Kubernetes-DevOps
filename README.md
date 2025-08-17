@@ -28,3 +28,4 @@
 - [2.9.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/2.9/the_project)
 - [2.10.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/2.10/the_project)
 - [3.1.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.1/ping_pong)
+- [3.3.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.3/log_output)
