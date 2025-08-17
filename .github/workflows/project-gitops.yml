@@ -1,0 +1,50 @@
+name: The Project GitOps deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'the_project/**'
+      - 'namespaces/project-namespace.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: project-deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_LOCATION }}
+
+      - name: Apply project manifests (Kustomize)
+        run: |
+          set -euxo pipefail
+          kubectl apply -f namespaces/project-namespace.yaml
+          kubectl apply -k the_project/manifest
+          kubectl -n project rollout status deploy/todo-app --timeout=180s || true
+          kubectl -n project rollout status deploy/todo-backend --timeout=180s || true
+          kubectl -n project rollout status statefulset/project-postgres --timeout=180s || true
+
+
