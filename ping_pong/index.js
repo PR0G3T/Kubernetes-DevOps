@@ -8,6 +8,15 @@ const port = Number(process.env.PORT || 8080);
 const databaseUrl = process.env.DATABASE_URL || "";
 
 let pgClient = null;
+async function checkDbConnection() {
+  if (!pgClient) return false;
+  try {
+    await pgClient.query("SELECT 1;");
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
 async function initDb() {
   if (!databaseUrl) return;
   pgClient = new Client({ connectionString: databaseUrl });
@@ -45,6 +54,20 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && req.url === "/count") {
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
     res.end(String(requestCount));
+    return;
+  }
+
+  // Readiness: only ready when DB connection succeeds
+  if (req.method === "GET" && req.url === "/readiness") {
+    checkDbConnection().then((ok) => {
+      if (ok) {
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("ready\n");
+      } else {
+        res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("not ready\n");
+      }
+    });
     return;
   }
 

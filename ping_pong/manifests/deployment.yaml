@@ -31,5 +31,11 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
       # No shared volume needed for HTTP-based communication
 

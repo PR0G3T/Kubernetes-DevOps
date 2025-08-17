@@ -72,6 +72,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Readiness: ready when ping-pong /count is reachable
+  if (req.method === "GET" && req.url === "/readiness") {
+    const options = { hostname: pingPongServiceHost, port: pingPongServicePort, path: "/count", method: "GET" };
+    const req2 = http.request(options, (res2) => {
+      if (res2.statusCode && res2.statusCode >= 200 && res2.statusCode < 300) {
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("ready\n");
+      } else {
+        res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("not ready\n");
+      }
+    });
+    req2.on("error", () => {
+      res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("not ready\n");
+    });
+    req2.end();
+    return;
+  }
+
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("Not Found\n");
 });
