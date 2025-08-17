@@ -34,9 +34,9 @@
 ### Chapter 4
 
 - [3.1.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.1/ping_pong)
-- [3.2.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.2/)
+- [3.2.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.2)
 - [3.3.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.3/log_output)
-- [3.4.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.4/)
+- [3.4.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.4)
 - [3.5.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.5/the_project)
 - [3.6.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.6/the_project)
 - [3.7.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/3.7/the_project)
@@ -52,4 +52,5 @@
 - [4.2.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.2/the_project)
 - [4.3.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.3/the_project)
 - [4.4.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.4/ping_pong)
-- [4.5.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.5/)
+- [4.5.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.5)
+- [4.6.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.6)
