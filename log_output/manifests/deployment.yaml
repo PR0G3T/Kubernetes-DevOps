@@ -41,6 +41,10 @@ spec:
               value: "ping-pong"
             - name: PING_PONG_PORT
               value: "8080"
+            - name: GREETER_HOST
+              value: "greeter-svc"
+            - name: GREETER_PORT
+              value: "8080"
             - name: MESSAGE
               valueFrom:
                 configMapKeyRef:
@@ -69,4 +73,70 @@ spec:
             items:
               - key: information.txt
                 path: information.txt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeter-v1
+  namespace: exercises
+  labels:
+    app: greeter
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greeter
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: greeter
+        version: v1
+    spec:
+      containers:
+        - name: greeter
+          image: greeter:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "8080"
+            - name: GREETING
+              value: "Hello from version 1"
+          ports:
+            - name: http
+              containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeter-v2
+  namespace: exercises
+  labels:
+    app: greeter
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greeter
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: greeter
+        version: v2
+    spec:
+      containers:
+        - name: greeter
+          image: greeter:2.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "8080"
+            - name: GREETING
+              value: "Hello from version 2"
+          ports:
+            - name: http
+              containerPort: 8080
 

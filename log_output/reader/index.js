@@ -2,7 +2,6 @@
 
 const http = require("http");
 const fs = require("fs");
-const http = require("http");
 
 const port = Number(process.env.PORT || 8080);
 const logFilePath = process.env.LOG_FILE_PATH || "/data/log.txt";
@@ -10,6 +9,8 @@ const messageFromEnv = process.env.MESSAGE || "";
 const infoFilePath = "/config/information.txt";
 const pingPongServiceHost = process.env.PING_PONG_HOST || "ping-pong";
 const pingPongServicePort = Number(process.env.PING_PONG_PORT || 8080);
+const greeterServiceHost = process.env.GREETER_HOST || "greeter-svc";
+const greeterServicePort = Number(process.env.GREETER_PORT || 8080);
 
 const server = http.createServer((req, res) => {
   if (req.method === "GET" && (req.url === "/" || req.url === "/status")) {
@@ -30,10 +31,29 @@ const server = http.createServer((req, res) => {
         res2.on("data", (chunk) => (data += chunk));
         res2.on("end", () => {
           const count = Number(String(data || "").trim()) || 0;
-          const header = `file content: ${infoText}\nenv variable: MESSAGE=${messageFromEnv}`;
-          const body = `${header}\n${lines}${lines ? "\n" : ""}Ping / Pongs: ${count}\n`;
-          res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-          res.end(body);
+          // Fetch greeting from greeter service
+          const gopts = { hostname: greeterServiceHost, port: greeterServicePort, path: "/hello", method: "GET" };
+          const req3 = http.request(gopts, (res3) => {
+            let g = "";
+            res3.setEncoding("utf-8");
+            res3.on("data", (c) => (g += c));
+            res3.on("end", () => {
+              const greeting = String(g || "").trim();
+              const header = `file content: ${infoText}\nenv variable: MESSAGE=${messageFromEnv}`;
+              const body = `${header}\n${lines}${lines ? "\n" : ""}Ping / Pongs: ${count}\n` +
+                `greetings: ${greeting}\n`;
+              res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+              res.end(body);
+            });
+          });
+          req3.on("error", () => {
+            const header = `file content: ${infoText}\nenv variable: MESSAGE=${messageFromEnv}`;
+            const body = `${header}\n${lines}${lines ? "\n" : ""}Ping / Pongs: ${count}\n` +
+              `greetings: (unavailable)\n`;
+            res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+            res.end(body);
+          });
+          req3.end();
         });
       });
       req2.on("error", () => {
