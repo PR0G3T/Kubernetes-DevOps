@@ -62,3 +62,6 @@
 ### Chapter 6
 
 - [5.1.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.1)
+- [5.2.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.2)
+- [5.3.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.3)
+- [5.4.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.4)
