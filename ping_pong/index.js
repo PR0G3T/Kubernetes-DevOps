@@ -29,6 +29,7 @@ initDb().catch((e) => {
 
 const server = http.createServer((req, res) => {
   if (req.method === "GET" && req.url === "/pingpong") {
+    // Back-compat if called directly without route rewrite
     const current = requestCount;
     requestCount += 1;
     if (pgClient) {
@@ -47,10 +48,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Ingress health/root check must succeed
+  // Root path provides the ping-pong behavior to support route rewrite
   if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
+    const current = requestCount;
+    requestCount += 1;
+    if (pgClient) {
+      pgClient
+        .query("UPDATE pingpong_counter SET count = $1 WHERE id = 1;", [requestCount])
+        .catch(() => {});
+    }
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("ok\n");
+    res.end(`pong ${current}\n`);
     return;
   }
 

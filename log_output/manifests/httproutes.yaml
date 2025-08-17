@@ -13,6 +13,12 @@ spec:
         - path:
             type: PathPrefix
             value: /pingpong
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
       backendRefs:
         - name: ping-pong
           port: 8080
