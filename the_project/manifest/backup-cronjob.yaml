@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: todo-db-backup
+  namespace: project
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: google/cloud-sdk:slim
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: project-postgres-credentials
+                      key: DATABASE_URL
+                - name: BACKUP_BUCKET
+                  value: gs://YOUR_BACKUP_BUCKET
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /var/secrets/google/sa.json
+              volumeMounts:
+                - name: gcp-sa
+                  mountPath: /var/secrets/google
+                  readOnly: true
+              command:
+                - sh
+                - -c
+                - |
+                  set -euo pipefail
+                  apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+                  ts=$(date -u +%Y%m%dT%H%M%SZ)
+                  fname="todo-backup-$ts.sql.gz"
+                  pg_dump "$DATABASE_URL" | gzip -c > "/tmp/$fname"
+                  gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" >/dev/null 2>&1 || true
+                  gsutil cp "/tmp/$fname" "$BACKUP_BUCKET/$fname"
+          volumes:
+            - name: gcp-sa
+              secret:
+                secretName: gcs-backup-credentials
+                items:
+                  - key: sa.json
+                    path: sa.json
+
