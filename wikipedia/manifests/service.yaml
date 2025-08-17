@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wiki-pages
+  namespace: exercises
+  labels:
+    app: wiki-pages
+spec:
+  type: ClusterIP
+  selector:
+    app: wiki-pages
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 80
+
+

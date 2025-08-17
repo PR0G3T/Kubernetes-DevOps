@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiki-pages
+  namespace: exercises
+  labels:
+    app: wiki-pages
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wiki-pages
+  template:
+    metadata:
+      labels:
+        app: wiki-pages
+    spec:
+      volumes:
+        - name: site
+          emptyDir: {}
+      initContainers:
+        - name: fetch-initial
+          image: curlimages/curl:8.7.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              set -euxo pipefail
+              mkdir -p /site
+              curl -sL "https://en.wikipedia.org/wiki/Kubernetes" -o /site/index.html
+          volumeMounts:
+            - name: site
+              mountPath: /site
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: site
+              mountPath: /usr/share/nginx/html
+        - name: refresher
+          image: alpine:3.19
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              apk add --no-cache curl >/dev/null 2>&1 || true
+              while true; do
+                # random wait 300-900 seconds
+                S=$(( $(od -An -N2 -tu2 /dev/urandom | tr -d ' ') % 601 + 300 ))
+                sleep "$S"
+                # resolve random article URL and fetch
+                URL=$(curl -sI https://en.wikipedia.org/wiki/Special:Random | awk -F': ' '/^Location: /{print $2}' | tr -d '\r\n')
+                if [ -z "$URL" ]; then
+                  URL=$(curl -s -L -o /dev/null -w '%{url_effective}' https://en.wikipedia.org/wiki/Special:Random)
+                fi
+                curl -sL "$URL" -o /site/index.html || true
+              done
+          volumeMounts:
+            - name: site
+              mountPath: /site
+
+
