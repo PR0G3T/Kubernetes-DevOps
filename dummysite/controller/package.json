@@ -1,0 +1,12 @@
+{
+  "name": "dummysite-controller",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@kubernetes/client-node": "^0.22.3"
+  }
+}
+
+

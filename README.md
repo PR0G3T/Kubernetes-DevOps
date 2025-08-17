@@ -58,3 +58,7 @@
 - [4.8.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.8)
 - [4.9.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.9)
 - [4.10.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/4.10)
+
+### Chapter 6
+
+- [5.1.](https://github.com/PR0G3T/Kubernetes-DevOps/tree/5.1)

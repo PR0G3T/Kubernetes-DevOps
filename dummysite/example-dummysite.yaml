@@ -1,0 +1,9 @@
+apiVersion: example.com/v1
+kind: DummySite
+metadata:
+  name: wikipedia-k8s
+  namespace: default
+spec:
+  website_url: https://en.wikipedia.org/wiki/Kubernetes
+
+
