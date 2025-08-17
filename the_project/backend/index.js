@@ -29,6 +29,16 @@ initDb().catch(() => {
   pgClient = null;
 });
 
+async function checkDbConnection() {
+  if (!pgClient) return false;
+  try {
+    await pgClient.query("SELECT 1;");
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
 function readRequestBody(req, cb) {
   let data = "";
   req.on("data", (chunk) => {
@@ -95,6 +105,25 @@ const server = http.createServer((req, res) => {
         log("warn", "invalid json in request body");
         res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({ error: "Invalid JSON" }));
+      }
+    });
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/healthz") {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("ok\n");
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/readiness") {
+    checkDbConnection().then((ok) => {
+      if (ok) {
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("ready\n");
+      } else {
+        res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("not ready\n");
       }
     });
     return;

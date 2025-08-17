@@ -29,6 +29,18 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 20
           env:
             - name: PORT
               valueFrom:
@@ -82,6 +94,18 @@ spec:
           # Build locally with: docker build -t todo-backend:2.8 ./the_project/backend
           image: todo-backend:2.8
           imagePullPolicy: IfNotPresent
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 20
           resources:
             requests:
               cpu: "100m"

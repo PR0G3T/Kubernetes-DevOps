@@ -209,6 +209,19 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && req.url === "/healthz") {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("ok\n");
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/readiness") {
+    // Frontend is ready when it can serve or fetch image (cheap check: respond 200)
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("ready\n");
+    return;
+  }
+
   if (req.method === "POST" && req.url === "/exit") {
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("bye\n", () => process.exit(0));
