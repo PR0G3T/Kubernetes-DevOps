@@ -1,0 +1,48 @@
+name: Delete environment on branch deletion
+
+on:
+  delete:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  delete-env:
+    if: github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Derive namespace from deleted branch
+        id: ns
+        run: |
+          NS="${{ github.event.ref }}"
+          # Protect main/project just in case
+          if [ "$NS" = "main" ] || [ "$NS" = "project" ]; then
+            echo "namespace=__SKIP__" >> "$GITHUB_OUTPUT"
+          else
+            echo "namespace=$NS" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stop if protected namespace
+        if: steps.ns.outputs.namespace == '__SKIP__'
+        run: echo "Skipping deletion for protected namespace" && exit 0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_LOCATION }}
+
+      - name: Delete namespace
+        run: |
+          kubectl delete namespace "${{ steps.ns.outputs.namespace }}" --ignore-not-found --wait=true
+
+
