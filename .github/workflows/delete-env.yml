@@ -2,8 +2,6 @@ name: Delete environment on branch deletion
 
 on:
   delete:
-    branches:
-      - "**"
 
 permissions:
   contents: read
