@@ -1,0 +1,56 @@
+name: Log output GitOps deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'log_output/**'
+      - 'namespaces/exercises-namespace.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: log-output-deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_LOCATION }}
+
+      - name: Apply log-output manifests
+        run: |
+          set -euxo pipefail
+          kubectl apply -f namespaces/exercises-namespace.yaml
+          kubectl -n exercises apply -f log_output/manifests/configmap.yaml
+          kubectl -n exercises apply -f log_output/manifests/service.yaml
+          kubectl -n exercises apply -f log_output/manifests/deployment.yaml
+          if kubectl api-resources | grep -q gateway.networking.k8s.io; then
+            kubectl -n exercises apply -f log_output/manifests/gateway.yaml
+            kubectl -n exercises apply -f log_output/manifests/httproutes.yaml
+          else
+            kubectl -n exercises apply -f log_output/manifests/ingress.yaml || true
+          fi
+          kubectl -n exercises rollout status deploy/log-output --timeout=120s
+
+
